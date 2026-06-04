@@ -106,6 +106,19 @@ export type SharedDeployVersionsProps = {
 	sendMetrics: boolean;
 	/** Resolved from getFlag("RESOURCES_PROVISION"). Controls whether bindings are auto-provisioned before upload. */
 	resourcesProvision: boolean;
+	/**
+	 * Pre-collected npm package dependency metadata from the project's package.json.
+	 * Computed in wrangler before calling deploy-helpers and passed through to the upload form.
+	 * `undefined` when the user has opted out via `dependencies_instrumentation: false` or
+	 * when the project has no resolvable dependencies.
+	 */
+	packageDependencies?:
+		| Array<{
+				name: string;
+				packageJsonVersion: string;
+				installedVersion: string;
+		  }>
+		| undefined;
 };
 
 export type DeployProps = SharedDeployVersionsProps & {

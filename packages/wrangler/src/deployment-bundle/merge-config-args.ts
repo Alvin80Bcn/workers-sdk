@@ -7,6 +7,7 @@ import {
 	UserError,
 } from "@cloudflare/workers-utils";
 import { getAssetsOptions, validateAssetsArgsAndConfig } from "../assets";
+import { collectPackageDependencies } from "../deploy/deployment-metadata";
 import { getFlag } from "../experimental-flags";
 import { logger } from "../logger";
 import { getMetricsUsageHeaders } from "../metrics";
@@ -96,6 +97,10 @@ async function mergeSharedConfigArgs(
 		accountId,
 		sendMetrics,
 		resourcesProvision: getFlag("RESOURCES_PROVISION") ?? false,
+		packageDependencies:
+			config.dependencies_instrumentation !== false && entry.projectRoot
+				? collectPackageDependencies(entry.projectRoot)
+				: undefined,
 	};
 }
 
