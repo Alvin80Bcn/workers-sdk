@@ -130,7 +130,7 @@ describe("wrangler deploy with containers", () => {
 			configuration: {
 				image:
 					getCloudflareContainerRegistry() +
-					"/some-account-id/my-container:Galaxy",
+					"/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			},
 			durable_objects: {
 				// uses namespace_id when the DO is a binding
@@ -177,7 +177,7 @@ describe("wrangler deploy with containers", () => {
 			│   rollout_active_grace_period = 0
 			│
 			│   [containers.configuration]
-			│   image = "registry.cloudflare.com/some-account-id/my-container:Galaxy"
+			│   image = "registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 			│   instance_type = "lite"
 			│
 			│   [containers.constraints]
@@ -519,7 +519,7 @@ describe("wrangler deploy with containers", () => {
 			configuration: {
 				image:
 					getCloudflareContainerRegistry() +
-					"/some-account-id/my-container:Galaxy",
+					"/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			},
 		});
 
@@ -594,7 +594,7 @@ describe("wrangler deploy with containers", () => {
 			configuration: {
 				image:
 					getCloudflareContainerRegistry() +
-					"/some-account-id/my-container:Galaxy",
+					"/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			},
 		});
 
@@ -672,7 +672,8 @@ describe("wrangler deploy with containers", () => {
 		mockGenerateImageRegistryCredentials(expect);
 		mockModifyApplication(expect, {
 			configuration: {
-				image: "registry.cloudflare.com/some-account-id/my-container:Galaxy",
+				image:
+					"registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			},
 			max_instances: 10,
 			rollout_active_grace_period: 600,
@@ -702,7 +703,7 @@ describe("wrangler deploy with containers", () => {
 			│   scheduling_policy = "default"
 			│   [containers.configuration]
 			│ - image = "registry.cloudflare.com/some-account-id/my-container:old"
-			│ + image = "registry.cloudflare.com/some-account-id/my-container:Galaxy"
+			│ + image = "registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 			│   instance_type = "lite"
 			│   [containers.constraints]
 			│
@@ -818,7 +819,8 @@ describe("wrangler deploy with containers", () => {
 		mockGenerateImageRegistryCredentials(expect);
 		mockModifyApplication(expect, {
 			configuration: {
-				image: "registry.cloudflare.com/some-account-id/my-container:Galaxy",
+				image:
+					"registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 			},
 			max_instances: 10,
 		});
@@ -851,7 +853,7 @@ describe("wrangler deploy with containers", () => {
 			│   scheduling_policy = "default"
 			│   [containers.configuration]
 			│ - image = "registry.cloudflare.com/some-account-id/my-container:old"
-			│ + image = "registry.cloudflare.com/some-account-id/my-container:Galaxy"
+			│ + image = "registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
 			│   instance_type = "lite"
 			│   [containers.constraints]
 			│
@@ -913,7 +915,8 @@ describe("wrangler deploy with containers", () => {
 				scheduling_policy: SchedulingPolicy.DEFAULT,
 				rollout_active_grace_period: 0,
 				configuration: {
-					image: "registry.cloudflare.com/some-account-id/my-container:Galaxy",
+					image:
+						"registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 					disk: {
 						size: "2GB",
 						size_mb: 2000,
@@ -1767,12 +1770,7 @@ describe("wrangler deploy with containers", () => {
 				)
 			)
 			.mockImplementationOnce(
-				mockDockerImageInspectDigestsWithRepoDigest(
-					expect,
-					containerName,
-					tag,
-					"sha256:three"
-				)
+				mockDockerImageInspectDigestsWithRepoDigest(expect, containerName, tag)
 			)
 			.mockImplementationOnce(
 				mockDockerImageInspectSize(expect, containerName, tag)
@@ -1798,12 +1796,112 @@ describe("wrangler deploy with containers", () => {
 				if (args && args[0] === "manifest" && args[1] === "inspect") {
 					// Verify the format: registry.cloudflare.com/account-id/image@hash
 					expect(args[3]).toBe(
-						`${getCloudflareContainerRegistry()}/some-account-id/${containerName}@sha256:three`
+						`${getCloudflareContainerRegistry()}/some-account-id/${containerName}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
 					);
 					// Return a manifest that matches the sha, indicating the image exists remotely
 					return JSON.stringify({
 						Descriptor: {
-							digest: "sha256:three",
+							digest:
+								"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+						},
+					});
+				}
+				return "";
+			}
+		);
+
+		writeWranglerConfig({
+			...DEFAULT_DURABLE_OBJECTS,
+			containers: [DEFAULT_CONTAINER_FROM_DOCKERFILE],
+		});
+		mockGetApplications([
+			{
+				id: "abc",
+				name: "my-container",
+				instances: 0,
+				max_instances: 10,
+				created_at: new Date().toString(),
+				version: 1,
+				account_id: "1",
+				scheduling_policy: SchedulingPolicy.DEFAULT,
+				rollout_active_grace_period: 0,
+				configuration: {
+					image: `${getCloudflareContainerRegistry()}/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`,
+					disk: {
+						size: "2GB",
+						size_mb: 2000,
+					},
+					vcpu: 0.0625,
+					memory: "256MB",
+					memory_mib: 256,
+				},
+				constraints: {
+					tiers: [1, 2],
+				},
+				durable_objects: {
+					namespace_id: "1",
+				},
+			},
+		]);
+		fs.writeFileSync("./Dockerfile", "FROM scratch");
+		mockGenerateImageRegistryCredentials(expect);
+
+		await runWrangler("deploy index.js");
+
+		expect(std.out).toContain("Image already exists remotely, skipping push");
+		expect(cliStd.stdout).toMatchInlineSnapshot(`
+			"╭ Deploy a container application deploy changes to your application
+			│
+			│ Container application changes
+			│
+			├ no changes my-container
+			│
+			╰ No changes to be made
+
+			"
+		`);
+		expect(std.err).toMatchInlineSnapshot(`""`);
+		expect(std.warn).toMatchInlineSnapshot(`""`);
+	});
+
+	it("should use digest when an existing tagged image already exists remotely", async ({
+		expect,
+	}) => {
+		mockGetVersion("Galaxy-Class");
+		const containerName = "my-container";
+		const tag = "Galaxy";
+		vi.mocked(spawn).mockReset();
+		vi.mocked(spawn)
+			.mockImplementationOnce(mockDockerInfo(expect))
+			.mockImplementationOnce(
+				mockDockerBuild(
+					expect,
+					containerName,
+					tag,
+					"FROM scratch",
+					process.cwd()
+				)
+			)
+			.mockImplementationOnce(
+				mockDockerImageInspectDigestsWithRepoDigest(expect, containerName, tag)
+			)
+			.mockImplementationOnce(
+				mockDockerImageInspectSize(expect, containerName, tag)
+			)
+			.mockImplementationOnce(mockDockerLogin(expect, "mockpassword"))
+			.mockImplementationOnce(
+				mockDockerImageDelete(expect, containerName, tag)
+			);
+		vi.mocked(execFileSync).mockImplementation(
+			(_file: string, args?: readonly string[]) => {
+				if (args && args[0] === "manifest" && args[1] === "inspect") {
+					expect(args[3]).toBe(
+						`${getCloudflareContainerRegistry()}/some-account-id/${containerName}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+					);
+					return JSON.stringify({
+						Descriptor: {
+							digest:
+								"sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
 						},
 					});
 				}
@@ -1846,6 +1944,16 @@ describe("wrangler deploy with containers", () => {
 		]);
 		fs.writeFileSync("./Dockerfile", "FROM scratch");
 		mockGenerateImageRegistryCredentials(expect);
+		mockModifyApplication(expect, {
+			configuration: {
+				image: `${getCloudflareContainerRegistry()}/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`,
+			},
+		});
+		mockCreateApplicationRollout(expect, {
+			description: "Progressive update",
+			strategy: "rolling",
+			kind: "full_auto",
+		});
 
 		await runWrangler("deploy index.js");
 
@@ -1855,9 +1963,19 @@ describe("wrangler deploy with containers", () => {
 			│
 			│ Container application changes
 			│
-			├ no changes my-container
+			├ EDIT my-container
 			│
-			╰ No changes to be made
+			│   scheduling_policy = "default"
+			│   [containers.configuration]
+			│ - image = "registry.cloudflare.com/some-account-id/my-container:Galaxy"
+			│ + image = "registry.cloudflare.com/some-account-id/my-container@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+			│   instance_type = "lite"
+			│   [containers.constraints]
+			│
+			│
+			│  SUCCESS  Modified application my-container (Application ID: abc)
+			│
+			╰ Applied changes
 
 			"
 		`);
@@ -2771,7 +2889,8 @@ function createDockerMockChain(
 		mockDockerImageInspectDigests(expect, containerName, tag),
 		mockDockerImageInspectSize(expect, containerName, tag),
 		mockDockerLogin(expect, "mockpassword"),
-		// Skip manifest inspect mock - it's not being called due to empty repoDigests
+		// Default manifest inspect output is invalid JSON, so Dockerfile deploy tests exercise
+		// the push path before using the post-push RepoDigests lookup.
 		mockDockerTag(
 			expect,
 			containerName,
@@ -2779,6 +2898,11 @@ function createDockerMockChain(
 			tag
 		),
 		mockDockerPush(expect, "some-account-id/" + containerName, tag),
+		mockDockerImageInspectDigestsForImage(
+			expect,
+			`${getCloudflareContainerRegistry()}/some-account-id/${containerName}:${tag}`,
+			`${getCloudflareContainerRegistry()}/some-account-id/${containerName}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+		),
 	];
 
 	return mocks;
@@ -3086,12 +3210,24 @@ function mockDockerImageInspectDigests(
 	containerName: string,
 	tag: string
 ) {
+	return mockDockerImageInspectDigestsForImage(
+		expect,
+		`${containerName}:${tag}`,
+		`${getCloudflareContainerRegistry()}/${containerName}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa`
+	);
+}
+
+function mockDockerImageInspectDigestsForImage(
+	expect: ExpectStatic,
+	imageTag: string,
+	repoDigest: string
+) {
 	return (cmd: string, args: readonly string[]) => {
 		expect(cmd).toBe("/usr/bin/docker");
 		expect(args).toEqual([
 			"image",
 			"inspect",
-			`${containerName}:${tag}`,
+			imageTag,
 			"--format",
 			"{{ json .RepoDigests }}",
 		]);
@@ -3111,10 +3247,7 @@ function mockDockerImageInspectDigests(
 		};
 
 		setImmediate(() => {
-			stdout.emit(
-				"data",
-				`["${getCloudflareContainerRegistry()}/${containerName}@sha256:three"] config-sha`
-			);
+			stdout.emit("data", `["${repoDigest}"]`);
 		});
 
 		return child as unknown as ChildProcess;
@@ -3124,8 +3257,7 @@ function mockDockerImageInspectDigests(
 function mockDockerImageInspectDigestsWithRepoDigest(
 	expect: ExpectStatic,
 	containerName: string,
-	tag: string,
-	imageId: string
+	tag: string
 ) {
 	return (cmd: string, args: readonly string[]) => {
 		expect(cmd).toBe("/usr/bin/docker");
@@ -3155,7 +3287,7 @@ function mockDockerImageInspectDigestsWithRepoDigest(
 			// Include account-id in the digest to match the managed registry format
 			stdout.emit(
 				"data",
-				`["${getCloudflareContainerRegistry()}/some-account-id/${containerName}@sha256:three"] ${imageId}`
+				`["${getCloudflareContainerRegistry()}/some-account-id/${containerName}@sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"]`
 			);
 		});
 

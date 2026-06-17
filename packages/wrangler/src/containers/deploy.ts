@@ -381,12 +381,9 @@ export async function apply(
 		(app) => app.name === containerConfig.name
 	);
 
-	// if there is a remote digest, it indicates that the image already exists in the managed registry
-	// so we should try and use the tag from the previous deployment if possible.
-	// however deployments that fail after push may result in no previous app but the image still existing
 	const imageRef =
 		"remoteDigest" in args.imageRef
-			? (prevApp?.configuration.image ?? args.imageRef.remoteDigest)
+			? args.imageRef.remoteDigest
 			: args.imageRef.newTag;
 	log(dim("Container application changes\n"));
 
