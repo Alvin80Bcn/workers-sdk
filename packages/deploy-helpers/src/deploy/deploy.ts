@@ -128,7 +128,8 @@ export type DeployCallbacks = {
 				containerConfig: Exclude<ContainerNormalizedConfig, ImageURIConfig>,
 				imageTag: string,
 				dryRun: boolean,
-				pathToDocker: string
+				pathToDocker: string,
+				verifyDockerIsRunning: boolean
 		  ) => Promise<unknown>)
 		| undefined;
 	deployContainers:
@@ -579,9 +580,12 @@ See https://developers.cloudflare.com/workers/platform/compatibility-dates for m
 		if (containersWithDockerfile.length > 0) {
 			await verifyDockerInstalled({
 				dockerPath,
-				isDev: false,
-				isDryRun,
-				numberOfContainers: containersWithDockerfile.length,
+				operation: `deploying${isDryRun ? " (even in dry-run mode)" : ""}`,
+				imageNoun:
+					containersWithDockerfile.length !== 1
+						? "the configured images"
+						: "the configured image",
+				hint: "If you cannot run Docker locally, you can still deploy your Worker by passing --containers-rollout=none. This will not deploy or update your Container.",
 			});
 		}
 	}
@@ -598,7 +602,8 @@ See https://developers.cloudflare.com/workers/platform/compatibility-dates for m
 						container,
 						workerTag ?? "worker-tag",
 						isDryRun,
-						dockerPath
+						dockerPath,
+						false
 					);
 				}
 			}
